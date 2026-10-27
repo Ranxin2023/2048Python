@@ -1,11 +1,9 @@
 import random
-from typing import List, Tuple
-
 import keyboard
-
+import msvcrt
 
 class Game:
-    board:List[List[str]]
+    board:list[list[str]]
     length:int
     width:int
     difficulty:float
@@ -18,6 +16,12 @@ class Game:
         self.board=[['*']*self.width for i in range(self.length)]
         self.score=0
 
+    def get_key(self) -> str:
+        ch = msvcrt.getwch()
+        if ch in ('\x00', '\xe0'):          # direction key will send a prefix character
+            arrow = msvcrt.getwch()
+            return {'H': 'w', 'K': 'a', 'P': 's', 'M': 'd'}.get(arrow, '')
+        return ch.lower()
     def play(self):
         # generate two num with either 2 or 4
         print("Let's play the game")
@@ -26,7 +30,10 @@ class Game:
         self.print_board()
         while not self.game_over():
             # print("enter loop")
-            dir = input()
+            dir = self.get_key()
+            if dir in ('q', '\x03'):         # q or Ctrl+C exit
+                print("bye-bye")
+                return
             if dir[0]=='w':
                 if self.up_move_judge():
                     self.up_move()
@@ -88,8 +95,8 @@ class Game:
                 
     def right_move(self):
         for i in range(self.length):
-            num_list:List[int]=[]
-            res_list:List[int]=[]
+            num_list:list[int]=[]
+            res_list:list[int]=[]
             for j in range(self.width-1, -1, -1):
                 if self.board[i][j]!='*':
                     num_list.append(int(self.board[i][j]))
@@ -110,8 +117,8 @@ class Game:
             
     def up_move(self):
         for j in range(self.width):
-            num_list:List[int]=[]
-            res_list:List[int]=[]
+            num_list:list[int]=[]
+            res_list:list[int]=[]
             for i in range(self.length):
                 if self.board[i][j]!='*':
                     num_list.append(int(self.board[i][j]))
@@ -158,9 +165,7 @@ class Game:
             for i in range(self.length):
                 if self.board[i][j]=='*':
                     asteroid_start=True
-                elif asteroid_start:
-                    return True
-                elif i!=0 and self.board[i][j]==self.board[i-1][j]:
+                elif asteroid_start or (i!=0 and self.board[i][j]==self.board[i-1][j]):
                     return True
         return False
                 
@@ -170,9 +175,7 @@ class Game:
             for j in range(self.width):
                 if self.board[i][j]=='*':
                     asteroid_start=True
-                elif asteroid_start:
-                    return True
-                elif j!=0 and self.board[i][j]==self.board[i][j-1]:
+                elif asteroid_start or (j!=0 and self.board[i][j]==self.board[i][j-1]):
                     return True
         return False
     
@@ -182,9 +185,7 @@ class Game:
             for j in range(self.width-1, -1, -1):
                 if self.board[i][j]=='*':
                     asteroid_start=True
-                elif asteroid_start:
-                    return True
-                elif j!=self.width-1 and self.board[i][j]==self.board[i][j+1]:
+                elif asteroid_start or (j!=self.width-1 and self.board[i][j]==self.board[i][j+1]):
                     return True
         return False
     
@@ -194,19 +195,16 @@ class Game:
             for i in range(self.length-1, -1, -1):
                 if self.board[i][j]=='*':
                     asteroid_start=True
-                elif asteroid_start:
-                    return True
-                elif i!=self.length-1 and self.board[i][j]==self.board[i+1][j]:
+                elif asteroid_start or (i!=self.length-1 and self.board[i][j]==self.board[i+1][j]):
                     return True
         return False
 
     def game_over(self)->bool:
-        if self.left_move_judge() or self.right_move_judge() or self.up_move_judge() or self.down_move_judge():
-            return False
-        return True
+        return not self.left_move_judge() and not self.right_move_judge() and not self.up_move_judge() and not self.down_move_judge()
+           
     
     def print_board(self)->None:
-        print("score: {}".format(self.score))
+        print(f"score: {self.score}")
         for i in range(self.length):
             for j in range(self.width):
                 print(self.board[i][j], end="\t")
@@ -237,7 +235,7 @@ def main():
                 return
             probability_four=float(probability_str)
             break
-        except ValueError as e:  # Catch ValueError for invalid input
+        except ValueError:  # Catch ValueError for invalid input
             print("Illegal arguments. Please enter valid numbers.")
     
     game = Game(height, width, probability_four)
