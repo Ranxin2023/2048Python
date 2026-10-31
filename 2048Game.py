@@ -1,6 +1,23 @@
-import random
-import keyboard
 import msvcrt
+import random
+
+# Original 2048 Color Scheme: Number -> (Background Color, Text Color)
+TILE_COLORS = {
+    '*':    ((205, 193, 180), (205, 193, 180)),
+    '2':    ((238, 228, 218), (119, 110, 101)),
+    '4':    ((237, 224, 200), (119, 110, 101)),
+    '8':    ((242, 177, 121), (249, 246, 242)),
+    '16':   ((245, 149,  99), (249, 246, 242)),
+    '32':   ((246, 124,  95), (249, 246, 242)),
+    '64':   ((246,  94,  59), (249, 246, 242)),
+    '128':  ((237, 207, 114), (249, 246, 242)),
+    '256':  ((237, 204,  97), (249, 246, 242)),
+    '512':  ((237, 200,  80), (249, 246, 242)),
+    '1024': ((237, 197,  63), (249, 246, 242)),
+    '2048': ((237, 194,  46), (249, 246, 242)),
+}
+BIG_TILE = ((60, 58, 50), (249, 246, 242))   # 超过 2048 的数字
+TILE_W = 7
 
 class Game:
     board:list[list[str]]
@@ -58,7 +75,7 @@ class Game:
         print("game over")
 
     def generate_num(self)->None:
-        empty_coor:List[Tuple[int]]=[]
+        empty_coor:list[tuple[int]]=[]
         for i in range(self.length):
             for j in range(self.width):
                 if self.board[i][j]=='*':
@@ -72,13 +89,13 @@ class Game:
 
     def left_move(self):
         for i in range(self.length):
-            num_list:List[int]=[]
-            res_list:List[int]=[]
+            num_list:list[int]=[]
+            res_list:list[int]=[]
             for j in range(self.width):
                 if self.board[i][j]!='*':
                     num_list.append(int(self.board[i][j]))
             combine=False
-            for k in range(0, len(num_list)):
+            for k in range(len(num_list)):
                 if combine and num_list[k]==num_list[k-1]:
                     combine=False
                     res_list.pop()
@@ -101,7 +118,7 @@ class Game:
                 if self.board[i][j]!='*':
                     num_list.append(int(self.board[i][j]))
             combine=False
-            for k in range(0, len(num_list)):
+            for k in range(len(num_list)):
                 if combine and num_list[k]==num_list[k-1]:
                     combine=False
                     res_list.pop()
@@ -123,7 +140,7 @@ class Game:
                 if self.board[i][j]!='*':
                     num_list.append(int(self.board[i][j]))
             combine=False
-            for k in range(0, len(num_list)):
+            for k in range(len(num_list)):
                 if combine and num_list[k]==num_list[k-1]:
                     combine=False
                     res_list.pop()
@@ -139,13 +156,13 @@ class Game:
 
     def down_move(self):
         for j in range(self.width):
-            num_list:List[int]=[]
-            res_list:List[int]=[]
+            num_list:list[int]=[]
+            res_list:list[int]=[]
             for i in range(self.length-1, -1, -1):
                 if self.board[i][j]!='*':
                     num_list.append(int(self.board[i][j]))
             combine=False
-            for k in range(0, len(num_list)):
+            for k in range(len(num_list)):
                 if combine and num_list[k]==num_list[k-1]:
                     combine=False
                     res_list.pop()
@@ -205,9 +222,17 @@ class Game:
     
     def print_board(self)->None:
         print(f"score: {self.score}")
-        for i in range(self.length):
-            for j in range(self.width):
-                print(self.board[i][j], end="\t")
+        for row in self.board:
+            top, mid = "", ""
+            for cell in row:
+                (br, bg, bb), (fr, fg, fb) = TILE_COLORS.get(cell, BIG_TILE)
+                color = f"\x1b[48;2;{br};{bg};{bb}m\x1b[38;2;{fr};{fg};{fb}m\x1b[1m"
+                text = '' if cell == '*' else cell
+                top += f"{color}{'':^{TILE_W}}\x1b[0m "
+                mid += f"{color}{text:^{TILE_W}}\x1b[0m "
+            print(top)
+            print(mid)
+            print(top)
             print()
 
 def main():
